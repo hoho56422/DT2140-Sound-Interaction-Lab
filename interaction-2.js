@@ -51,19 +51,9 @@ rain.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-
-let fallStart = null;
-let fallTriggered = false;
-
-let lastMagnitude = null;
-let lastTime = null;
-
-const GRAVITY = 9.81;
-const FREEFALL_THRESHOLD = 4.0;
-const FALL_DURATION = 100;
+let lastRainTime = 0;
 
 function accelerationChange(accx, accy, accz) {
-    const now = performance.now();
 
     const magnitude = Math.sqrt(
         accx * accx +
@@ -71,42 +61,13 @@ function accelerationChange(accx, accy, accz) {
         accz * accz
     );
 
-    // Check if phone was approximately stationary
-    // before entering free fall.
-    const wasStationary =
-        lastMagnitude !== null &&
-        Math.abs(lastMagnitude - GRAVITY) < 1.5 &&
-        lastTime !== null &&
-        now - lastTime < 100;
+    const now = millis();
 
-    const isFreeFall = magnitude < FREEFALL_THRESHOLD;
-
-    if (isFreeFall) {
-
-        if (fallStart === null && wasStationary) {
-            fallStart = now;
-            fallTriggered = false;
-        }
-
-        if (fallStart !== null) {
-            const fallDuration = now - fallStart;
-
-            if (
-                fallDuration >= FALL_DURATION &&
-                !fallTriggered
-            ) {
-                playAudio();
-                fallTriggered = true;
-            }
-        }
-
-    } else {
-        fallStart = null;
-        fallTriggered = false;
+    // Detect low acceleration
+    if (magnitude < 4.0 && now - lastRainTime > 4000) {
+        playAudio();
+        lastRainTime = now;
     }
-
-    lastMagnitude = magnitude;
-    lastTime = now;
 }
 
 function rotationChange(rotx, roty, rotz) {
