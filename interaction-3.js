@@ -55,30 +55,26 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
-let selectedFrequency = 329.63; // E4
-let lastPluckTime = 0;
+let selectedFrequency = 329.63; // Default E4
 
 function rotationChange(rotx, roty, rotz) {
-   
+    // Map tilt angle (-90 to 90) to frequency (220 to 880 Hz)
+    selectedFrequency = map(roty, -90, 90, 220, 880);
+    selectedFrequency = constrain(selectedFrequency, 220, 880);
 }
 
 
 function mousePressed() {
     playAudio(mouseX/windowWidth)
+    return false;
+
     // Use this for debugging from the desktop!
 }
 
 let lastPlayTime = 0;
 
 function deviceMoved() {
-    movetimer = millis();
-    statusLabels[2].style("color", "pink");
-
-    // Trigger at most once every 500 ms
-    if (millis() - lastPlayTime > 500) {
-        playAudio();
-        lastPlayTime = millis();
-    }
+  
 }
 
 function deviceTurned() {
@@ -116,7 +112,7 @@ function playAudio() {
     }
 
     // Select note E4
-    dspNode.setParamValue("/karplus/params/freq", 329.63);
+    dspNode.setParamValue("/karplus/params/freq", selectedFrequency);
 
     // Plucking strength
     dspNode.setParamValue("/karplus/params/gain", 0.5);
