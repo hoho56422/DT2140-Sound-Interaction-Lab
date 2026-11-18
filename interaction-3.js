@@ -59,7 +59,7 @@ let selectedFrequency = 329.63; // Default E4
 
 function rotationChange(rotx, roty, rotz) {
     // Map tilt angle (-90 to 90) to frequency (220 to 880 Hz)
-    selectedFrequency = map(roty, -90, 90, 220, 880);
+    selectedFrequency = map(rotz, -90, 90, 220, 880);
     selectedFrequency = constrain(selectedFrequency, 220, 880);
 }
 
