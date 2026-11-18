@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "thunder";
+const dspName = "karplus";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-thunder.createDSP(audioContext, 1024)
+karplus.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -55,9 +55,35 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
+let selectedFrequency = 329.63; // E4
+let lastPluckTime = 0;
+
 function rotationChange(rotx, roty, rotz) {
+    const tilt = roty;
+
+    if (tilt < -30) {
+        selectedFrequency = 261.63; // C4
+    } else if (tilt < -10) {
+        selectedFrequency = 293.66; // D4
+    } else if (tilt < 10) {
+        selectedFrequency = 329.63; // E4
+    } else if (tilt < 30) {
+        selectedFrequency = 392.00; // G4
+    } else {
+        selectedFrequency = 440.00; // A4
+    }
 }
 
+function deviceShaken() {
+    shaketimer = millis();
+    statusLabels[0].style("color", "pink");
+
+    // Avoid multiple triggers from one shake
+    if (millis() - lastPluckTime > 400) {
+        playAudio();
+        lastPluckTime = millis();
+    }
+}
 function mousePressed() {
     playAudio(mouseX/windowWidth)
     // Use this for debugging from the desktop!
@@ -72,9 +98,9 @@ function deviceTurned() {
     threshVals[1] = turnAxis;
 }
 function deviceShaken() {
-    shaketimer = millis();
+    // shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    // playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -95,15 +121,23 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
-function playAudio(pressure) {
-    if (!dspNode) {
+function playAudio() {
+    if (!dspNode || audioContext.state !== "running") {
         return;
     }
-    if (audioContext.state === 'suspended') {
-        return;
-    }
-    console.log(pressure)
-    dspNode.setParamValue("/thunder/rumble", pressure)
+
+    // Select pitch
+    dspNode.setParamValue("/freq", selectedFrequency);
+
+    // Set plucking strength
+    dspNode.setParamValue("/gain", 0.5);
+
+    // Pluck string
+    dspNode.setParamValue("/gate", 1);
+
+    setTimeout(() => {
+        dspNode.setParamValue("/gate", 0);
+    }, 100);
 }
 
 //==========================================================================================

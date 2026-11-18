@@ -24,7 +24,7 @@ gate = button("gate") : ba.line(50000);
 delayTimeSamples = (env1 * 240.0 + 1.2); // convert ms to samples
 
 // Oscillator frequency: pow(env2, 7) * 2700
-oscFreq = 7, env2 : pow * hslider("Freq", 2700, 20, 5000, 1);
+oscFreq = 7, env2 : pow * hslider("Freq", 3500, 20, 5000, 1);
 
 // Main oscillator
 osc = os.osc(oscFreq) * env2;
