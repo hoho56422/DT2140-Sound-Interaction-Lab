@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "thunder";
+const dspName = "wind";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,10 +25,11 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-thunder.createDSP(audioContext, 1024)
+wind.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
+        dspNode.setParamValue("/wind/force", 0);
         console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
@@ -55,26 +56,46 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
-let thunderTriggered = false;
 
+let lastRotationY = null;
+let lastTime = null;
+let windForce = 0;
 
 function rotationChange(rotx, roty, rotz) {
-    // console.log("X:", rotx, "Y:", roty, "Z:", rotz);
 
-    const pointingUp = Math.abs(rotx - 90) < 15;
-
-    if (pointingUp && !thunderTriggered) {
-        playAudio();
-        thunderTriggered = true;
+    if (!dspNode || !Number.isFinite(roty)) {
+        return;
     }
 
-    if (!pointingUp) {
-        thunderTriggered = false;
+    const now = millis();
+
+    if (lastRotationY !== null && lastTime !== null) {
+
+        // Time between two measurements (seconds)
+        const dt = Math.max((now - lastTime) / 1000, 0.01);
+
+        // How fast the phone is tilting
+        const speed = Math.abs(roty - lastRotationY) / dt;
+
+        // Map movement speed to wind strength (0–1)
+        const targetForce = Math.max(
+            0,
+            Math.min(1, (speed - 5) / 100)
+        );
+
+        // Smooth the changes in wind strength
+        windForce += (targetForce - windForce) * 0.15;
+
+        // Continuously control the wind sound
+        dspNode.setParamValue("/wind/force", windForce);
     }
+
+    lastRotationY = roty;
+    lastTime = now;
 }
 
 function mousePressed() {
-    playAudio()
+    // playAudio()
     // Use this for debugging from the desktop!
 }
 
@@ -89,7 +110,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    
 }
 
 function getMinMaxParam(address) {
@@ -110,20 +131,8 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
-function playAudio() {
-    if (!dspNode) {
-        return;
-    }
-    if (audioContext.state === 'suspended') {
-        return;
-    }
-    // Edit here the addresses ("/thunder/rumble") depending on your WASM controls (you can see 
-    // them printed on the console of your browser when you load the page)
-    // For example if you change to a bell sound, here you could use "/churchBell/gate" instead of
-    // "/thunder/rumble".
-    dspNode.setParamValue("/thunder/rumble", 1)
-    setTimeout(() => { dspNode.setParamValue("/thunder/rumble", 0) }, 100);
-}
+
+
 
 //==========================================================================================
 // END
