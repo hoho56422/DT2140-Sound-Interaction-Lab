@@ -59,39 +59,26 @@ let selectedFrequency = 329.63; // E4
 let lastPluckTime = 0;
 
 function rotationChange(rotx, roty, rotz) {
-    const tilt = roty;
-
-    if (tilt < -30) {
-        selectedFrequency = 261.63; // C4
-    } else if (tilt < -10) {
-        selectedFrequency = 293.66; // D4
-    } else if (tilt < 10) {
-        selectedFrequency = 329.63; // E4
-    } else if (tilt < 30) {
-        selectedFrequency = 392.00; // G4
-    } else {
-        selectedFrequency = 440.00; // A4
-    }
+   
 }
 
-function deviceShaken() {
-    shaketimer = millis();
-    statusLabels[0].style("color", "pink");
 
-    // Avoid multiple triggers from one shake
-    if (millis() - lastPluckTime > 400) {
-        playAudio();
-        lastPluckTime = millis();
-    }
-}
 function mousePressed() {
     playAudio(mouseX/windowWidth)
     // Use this for debugging from the desktop!
 }
 
+let lastPlayTime = 0;
+
 function deviceMoved() {
     movetimer = millis();
     statusLabels[2].style("color", "pink");
+
+    // Trigger at most once every 500 ms
+    if (millis() - lastPlayTime > 500) {
+        playAudio();
+        lastPlayTime = millis();
+    }
 }
 
 function deviceTurned() {
@@ -122,24 +109,19 @@ function getMinMaxParam(address) {
 //==========================================================================================
 
 function playAudio() {
-    if (!dspNode || audioContext.state !== "running") {
+    if (!dspNode) {
+        console.log("DSP not loaded");
         return;
     }
 
-    // Select pitch
-    dspNode.setParamValue("/freq", selectedFrequency);
+    if (audioContext.state !== "running") {
+        console.log("AudioContext not running");
+        return;
+    }
 
-    // Set plucking strength
-    dspNode.setParamValue("/gain", 0.5);
-
-    // Pluck string
-    dspNode.setParamValue("/gate", 1);
-
-    setTimeout(() => {
-        dspNode.setParamValue("/gate", 0);
-    }, 100);
+    console.log("Available params:", dspNode.getParams());
+    console.log("Movement detected!");
 }
-
 //==========================================================================================
 // END
 //==========================================================================================
