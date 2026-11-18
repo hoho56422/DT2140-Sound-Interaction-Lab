@@ -55,7 +55,22 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
+let thunderTriggered = false;
+
+
 function rotationChange(rotx, roty, rotz) {
+    console.log("X:", rotx, "Y:", roty, "Z:", rotz);
+
+    const pointingUp = Math.abs(rotx - 90) < 15;
+
+    if (pointingUp && !thunderTriggered) {
+        playAudio();
+        thunderTriggered = true;
+    }
+
+    if (!pointingUp) {
+        thunderTriggered = false;
+    }
 }
 
 function mousePressed() {
