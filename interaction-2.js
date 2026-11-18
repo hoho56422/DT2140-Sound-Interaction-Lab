@@ -55,28 +55,58 @@ rain.createDSP(audioContext, 1024)
 let fallStart = null;
 let fallTriggered = false;
 
+let lastMagnitude = null;
+let lastTime = null;
+
+const GRAVITY = 9.81;
+const FREEFALL_THRESHOLD = 2.0;
+const FALL_DURATION = 247;
+
 function accelerationChange(accx, accy, accz) {
     const now = performance.now();
 
-    // Detect near-zero acceleration
-    const isFreeFall = Math.abs(accz) < 2.0;
+    const magnitude = Math.sqrt(
+        accx * accx +
+        accy * accy +
+        accz * accz
+    );
+
+    // Check if phone was approximately stationary
+    // before entering free fall.
+    const wasStationary =
+        lastMagnitude !== null &&
+        Math.abs(lastMagnitude - GRAVITY) < 1.5 &&
+        lastTime !== null &&
+        now - lastTime < 100;
+
+    const isFreeFall = magnitude < FREEFALL_THRESHOLD;
 
     if (isFreeFall) {
-        if (fallStart === null) {
+
+        if (fallStart === null && wasStationary) {
             fallStart = now;
+            fallTriggered = false;
         }
 
-        const fallDuration = now - fallStart;
+        if (fallStart !== null) {
+            const fallDuration = now - fallStart;
 
-        // Approx. 30 cm free fall from rest
-        if (fallDuration >= 247 && !fallTriggered) {
-            playAudio();
-            fallTriggered = true;
+            if (
+                fallDuration >= FALL_DURATION &&
+                !fallTriggered
+            ) {
+                playAudio();
+                fallTriggered = true;
+            }
         }
+
     } else {
         fallStart = null;
         fallTriggered = false;
     }
+
+    lastMagnitude = magnitude;
+    lastTime = now;
 }
 
 function rotationChange(rotx, roty, rotz) {
@@ -98,7 +128,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    // playAudio();
 }
 
 function getMinMaxParam(address) {
