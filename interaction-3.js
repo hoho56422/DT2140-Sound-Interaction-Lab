@@ -55,7 +55,7 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
-let selectedFrequency = 329.63; // Default E4
+let selectedFrequency = 880.63; // Default E4
 
 function rotationChange(rotx, roty, rotz) {
     // Map tilt angle (-90 to 90) to frequency (220 to 880 Hz)
