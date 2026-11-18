@@ -107,7 +107,7 @@ function getMinMaxParam(address) {
 
 let gateTimer = null;
 
-function playAudio() {
+function playAudio(selectedFrequency) {
     if (!dspNode || audioContext.state !== "running") {
         return;
     }
