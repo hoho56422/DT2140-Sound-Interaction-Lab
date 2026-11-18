@@ -108,19 +108,34 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
+let gateTimer = null;
+
 function playAudio() {
-    if (!dspNode) {
-        console.log("DSP not loaded");
+    if (!dspNode || audioContext.state !== "running") {
         return;
     }
 
-    if (audioContext.state !== "running") {
-        console.log("AudioContext not running");
-        return;
+    // Select note E4
+    dspNode.setParamValue("/karplus/params/freq", 329.63);
+
+    // Plucking strength
+    dspNode.setParamValue("/karplus/params/gain", 0.5);
+
+    // Trigger the string
+    dspNode.setParamValue("/karplus/gate", 0);
+
+    if (gateTimer !== null) {
+        clearTimeout(gateTimer);
     }
 
-    console.log("Available params:", dspNode.getParams());
-    console.log("Movement detected!");
+    gateTimer = setTimeout(() => {
+        dspNode.setParamValue("/karplus/gate", 1);
+
+        gateTimer = setTimeout(() => {
+            dspNode.setParamValue("/karplus/gate", 0);
+            gateTimer = null;
+        }, 150);
+    }, 20);
 }
 //==========================================================================================
 // END
