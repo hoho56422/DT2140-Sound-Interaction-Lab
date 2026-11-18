@@ -59,8 +59,8 @@ let lastMagnitude = null;
 let lastTime = null;
 
 const GRAVITY = 9.81;
-const FREEFALL_THRESHOLD = 2.0;
-const FALL_DURATION = 247;
+const FREEFALL_THRESHOLD = 4.0;
+const FALL_DURATION = 100;
 
 function accelerationChange(accx, accy, accz) {
     const now = performance.now();
