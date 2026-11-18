@@ -126,16 +126,13 @@ function playAudio() {
         return;
     }
 
-    // Start rain
     dspNode.setParamValue("/rain/density", 500);
     dspNode.setParamValue("/rain/volume", 0.5);
 
-    // Cancel previous timer
     if (rainTimer !== null) {
         clearTimeout(rainTimer);
     }
 
-    // Stop rain after 3 seconds
     rainTimer = setTimeout(() => {
         dspNode.setParamValue("/rain/volume", 0);
         rainTimer = null;
